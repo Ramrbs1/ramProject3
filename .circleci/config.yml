@@ -46,8 +46,9 @@ jobs:
             cd frontend
             npm i
             npm run build
-            cd dist
-            ls
+#            npm run prettier
+#            cd dist
+ #           ls
 
       - save_cache:
           paths: [frontend/node_modules]
@@ -66,8 +67,8 @@ jobs:
              cd backend
              npm i
              npm run build
-             cd dist
-             ls
+             
+             
 
       - save_cache:
           paths: [backend/node_modules]
@@ -83,8 +84,8 @@ jobs:
       - run:
           name: front-end test
           command: |
-            cd frontend/test
-            npm test
+            npm i
+            npm run test
    
                 
   test-backend:
@@ -97,7 +98,7 @@ jobs:
       - run:
           name: back-end test
           command: |
-            cd backend/test
+            npm i
             npm test
       
             
