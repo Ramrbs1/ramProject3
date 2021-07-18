@@ -84,6 +84,7 @@ jobs:
       - run:
           name: front-end test
           command: |
+            cd frontend
             npm i
             npm run test
    
@@ -98,35 +99,40 @@ jobs:
       - run:
           name: back-end test
           command: |
+            cd backend
             npm i
             npm test
       
             
-#scan-frontend:
-#  docker:
-#    - image: circleci/node:13.8.0
-#  steps:
-#    - checkout
-#    - restore_cache:
-#        keys: [frontend-build]
-#    - run:
-#        name: front-end scan
-#        command: |
-#          npm audit --audit-level=critical
-#
-#scan-backend:
-#  docker:
-#    - image: circleci/node:13.8.0
-#  steps:
-#    - checkout
-#    - restore_cache:
-#        keys: [backend-build] 
-#    - run:
-#        name: back-end scan
-#        command: |
-#          npm audit --audit-level=critical
-#   
-#
+scan-frontend:
+  docker:
+    - image: circleci/node:13.8.0
+  steps:
+    - checkout
+    - restore_cache:
+        keys: [frontend-build]
+    - run:
+        name: front-end scan
+        command: |
+          cd frontend
+          npm i
+          npm audit --audit-level=critical
+
+scan-backend:
+  docker:
+    - image: circleci/node:13.8.0
+  steps:
+    - checkout
+    - restore_cache:
+        keys: [backend-build] 
+    - run:
+        name: back-end scan
+        command: |
+          cd backend
+          npm i
+          npm audit --audit-level=critical
+   
+
 #  deploy-infrastructure:
 #    docker:
 #      # Docker image here that supports AWS CLI
