@@ -157,7 +157,7 @@ jobs:
               --tags ramProject3=back-end \
               --stack-name "back-end-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
-              #exit 1
+#              exit 1
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -166,14 +166,14 @@ jobs:
               --tags ramProject3=front-end \
               --stack-name "front-end-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
-              #exit 1
+#              exit 1
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
-            aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text > ~/ramProject3/.circleci/ansible/inventory.txt
-            exit 1
+            aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/ramProject3/.circleci/ansible/inventory.txt
+#            exit 1
       - persist_to_workspace:
           root: ~/
           paths:

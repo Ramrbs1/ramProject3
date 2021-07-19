@@ -37,7 +37,7 @@ Resources:
           Value: !Sub backend-${ID}
           
 Outputs:
-  back-end-EC2-public-dns:
+  backendEC2publicdns:
     Value: !GetAtt EC2Instance.DNSName
     Description: public Dns for beckecn ec2 instacne
     Export:
