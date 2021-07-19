@@ -173,8 +173,9 @@ jobs:
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
             aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
-#            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
+#            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
+            
 
       - persist_to_workspace:
           root: ~/
@@ -209,8 +210,8 @@ jobs:
       - run:
           name: Configure server
           command: |
-#            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt configure-server.yml
+#            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
 #            exit 1
       # Here's where you will add some code to rollback on failure      
 #
