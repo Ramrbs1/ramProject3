@@ -38,7 +38,7 @@ Resources:
           
 Outputs:
   backendEC2publicdns:
-    Value: !GetAtt EC2Instance.DNSName
-    Description: public Dns for beckecn ec2 instacne
+    Value: !GetAtt EC2Instance.PublicDnsName
+    Description: public DNS for backend ec2 instacne
     Export:
       Name: backendEC2publicdns
