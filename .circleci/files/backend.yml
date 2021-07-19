@@ -41,4 +41,4 @@ Outputs:
     Value: !GetAtt EC2Instance.DNSName
     Description: public Dns for beckecn ec2 instacne
     Export:
-      Name: back-end-EC2-public-dns
+      Name: backendEC2publicdns
