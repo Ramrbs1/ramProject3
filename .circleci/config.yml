@@ -1,5 +1,6 @@
 version: 2.1
 orbs:
+  node: circleci/node@3.0.0
   slack: circleci/slack@4.1
 
 commands:
@@ -105,11 +106,30 @@ jobs:
             npm i
             npm test
       - slack/notify:
-          event: fail
-          template: basic_fail_1
-      - slack/notify:
-          event: pass
-          template: success_tagged_deploy_1
+          event: always
+          custom: |
+           {
+             "blocks": [
+               {
+                 "type": "section",
+                 "text": {
+                   "type": "mrkdwn",
+                   "text": "Current Job: $CIRCLE_JOB"
+                 }
+               },
+               {
+                 "type": "section",
+                 "text": {
+                   "type": "mrkdwn",
+                   "text": "Slack notification"
+                 }
+               }
+              ]
+             }
+#          template: basic_fail_1
+#      - slack/notify:
+#          event: pass
+#          template: success_tagged_deploy_1
 
   scan-frontend:
     docker:
