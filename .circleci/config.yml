@@ -1,6 +1,5 @@
 version: 2.1
 orbs:
-  node: circleci/node@3.0.0
   slack: circleci/slack@4.1
 
 commands:
@@ -145,39 +144,41 @@ jobs:
 
      
 
-#  deploy-infrastructure:
-#    docker:
-#      # Docker image here that supports AWS CLI
-#    steps:
-#      # Checkout code from git
-#      - run:
-#          name: Ensure back-end infrastructure exists
-#          command: |
-#            aws cloudformation deploy \
-#              --template-file .circleci/files/backend.yml \
-#              #--tags project=your-tag \
-#              # --stack-name "your back-end stack name with workflow id" \
-#              # --parameter-overrides ID="your workflow id"  
-#              exit 1
-#      - run:
-#          name: Ensure front-end infrastructure exist
-#          command: |
-#            aws cloudformation deploy \
-#              --template-file .circleci/files/frontend.yml \
-#              #--tags project=your-tag \
-#              # --stack-name "your front-end stack name with workflow id" \
-#              # --parameter-overrides ID="your workflow id"  
-#              exit 1
-#      - run:
-#          name: Add back-end ip to ansible inventory
-#          command: |
-#            # Your code here
-#            exit 1
-#      - persist_to_workspace:
-#          root: ~/
-#          paths:
-#            - project/.circleci/ansible/inventory.txt
-#      # Here's where you will add some code to rollback on failure      
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml --region=us-east-1 \
+              --tags ramProject3=back-end \
+              --stack-name "back-end-${CIRCLE_WORKFLOW_ID}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+              #exit 1
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml --region=us-east-1 \
+              --tags ramProject3=front-end \
+              --stack-name "front-end-${CIRCLE_WORKFLOW_ID}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+              #exit 1
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            yum install -y tar # install the tar
+            yum install -y gzip # install the gzip
+            aws cloudformation list-exports --query "Exports[?Name==\`back-end-EC2-public-dns\`].Value" --no-paginate --output text > ~/ramProject3/.circleci/ansible/inventory.txt
+            exit 1
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - ramProject3/.circleci/ansible/inventory.txt
+      # Here's where you will add some code to rollback on failure      
 #
 #  configure-infrastructure:
 #    docker:
@@ -314,21 +315,21 @@ jobs:
 workflows:
   default:
     jobs:
-#      - build-frontend
+      - build-frontend
       - build-backend
-#      - test-frontend:
-#          requires: [build-frontend]
+      - test-frontend:
+          requires: [build-frontend]
       - test-backend:
           requires: [build-backend]
-#      - scan-backend:
-#          requires: [build-backend]
-#      - scan-frontend:
-#          requires: [build-frontend]
-#      - deploy-infrastructure:
-#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [test-feature-branch]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
 #      - configure-infrastructure:
 #          requires: [deploy-infrastructure]
 #      - run-migrations:
