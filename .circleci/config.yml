@@ -166,39 +166,53 @@ jobs:
               --tags ramProject3=front-end \
               --stack-name "front-end-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
-#              exit 1
+
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
             aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
+#            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
-#            exit 1
+
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure      
+      # Here's where you will add some code to rollback on failure   
+      - run: return 1
+      - run:
+          name: Destroy environment
+          command: |
+            aws cloudformation delete-stack --stack-name front-end-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name back-end-${CIRCLE_WORKFLOW_ID}
+          when: on_fail
+      
 #
-#  configure-infrastructure:
-#    docker:
-#      # Docker image here that supports Ansible
-#    steps:
-#      # Checkout code from git
-#      # Add ssh keys with fingerprint
-#      # attach workspace
-#      - run:
-#          name: Install dependencies
-#          command: |
-#            # Your code here
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["3a:48:6b:9b:08:f1:36:88:33:f6:1e:7a:52:e1:4e:41"] # You can get this ID in the section where you registered the SSH Key
+      - attach_workspace:
+          at: ~/
+      - run : |
+          cat ~/project/.circleci/ansible/inventory.txt
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible #install the dependencies needed for your playbook
 #            exit 1
-#      - run:
-#          name: Configure server
-#          command: |
-#            # Your code here
+      - run:
+          name: Configure server
+          command: |
+#            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
+            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt configure-server.yml
 #            exit 1
-#      # Here's where you will add some code to rollback on failure      
+      # Here's where you will add some code to rollback on failure      
 #
 #  run-migrations:
 #    docker:
