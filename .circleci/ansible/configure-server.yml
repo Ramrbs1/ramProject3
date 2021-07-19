@@ -17,10 +17,10 @@
       
     - name: "install python for Ansible."
       become: yes
-        apt:
-          name: python
-          state: latest
-          update_cache: yes
+      apt:
+        name: python
+        state: latest
+        update_cache: yes
     
 
   roles:
