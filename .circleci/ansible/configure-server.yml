@@ -1,12 +1,5 @@
 ---
 
-- name: Install Python
-  hosts: web
-  user: ubuntu
-  become: yes 
-  raw: apt -y update && apt install -y python-minimal
-  when: check_python.rc != 0
-    
 - name: "configuration play." 
   hosts: web
   user: ubuntu
