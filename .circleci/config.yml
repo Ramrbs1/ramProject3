@@ -173,6 +173,7 @@ jobs:
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
             aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
+            cat ~/project/.circleci/ansible/inventory.txt
 #            exit 1
       - persist_to_workspace:
           root: ~/
