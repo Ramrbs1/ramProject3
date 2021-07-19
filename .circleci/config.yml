@@ -172,12 +172,12 @@ jobs:
           command: |
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
-            aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/ramProject3/.circleci/ansible/inventory.txt
+            aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
 #            exit 1
       - persist_to_workspace:
           root: ~/
           paths:
-            - ramProject3/.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 #
 #  configure-infrastructure:
