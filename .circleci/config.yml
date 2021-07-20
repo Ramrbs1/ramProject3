@@ -48,9 +48,9 @@ jobs:
             cd frontend
             npm i
             npm run build
-#            npm run prettier
-#            cd dist
- #           ls
+            #npm run prettier
+            cd dist
+            ls
 
       - save_cache:
           paths: [frontend/node_modules]
@@ -215,7 +215,7 @@ jobs:
             apk add --update ansible #install the dependencies needed for your playbook
 #            exit 1
       - run:
-          name: add value in the~/backend/.env file
+          name: add value in the ~/backend/.env file
           command: |
             >backend/.env
             echo NODE_ENV=test >> "backend/.env"
@@ -256,6 +256,7 @@ jobs:
             npm install --no-fund
             npm audit fix --audit-level=critical
             npm run migrations > ~/project/backend/Ram_migrations.txt
+            cat ~/project/backend/Ram_migrations.txt
           no_output_timeout: 30m
       - run:
           name: Send migration results to memstash
@@ -275,26 +276,46 @@ jobs:
 
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}    
-#
-#  deploy-frontend:
-#    docker:
-#      - image: amazon/aws-cli
-#    steps:
-#      - checkout
-#      - run:
-#          name: Install dependencies
-#          command: |
-#            # your code here
-#      - run:
-#          name: Get backend url
-#          command: |
-#            # your code here
-#            export API_URL="http://${BACKEND_IP}:3030"
-#            echo "${API_URL}"
-#      - run:
-#          name: Deploy frontend objects
-#          command: |
-#            # your code here
+
+  deploy-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - run:
+          name: Install PIP and aws cli
+          command: |
+            sudo apt-get install python-pip python-dev
+            sudo pip install awscli
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm install
+            
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Get backend url
+          command: |
+            #BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}" --output text)
+            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}" --output text)
+            BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            cd frontend
+            npm install
+            npm run build
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm install
+            npm run build
+            aws s3 cp --recursive ./dist/ s3://udapeople-ra1k061yhdkclt198
+            
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
 #      # Here's where you will add some code to rollback on failure      
 #                    
 #  deploy-backend:
@@ -394,8 +415,8 @@ workflows:
          requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-#      - deploy-frontend:
-#          requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
 #      - deploy-backend:
 #          requires: [run-migrations]
 #      - smoke-test:
