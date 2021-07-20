@@ -1,14 +1,17 @@
 ---
-
-- name: configuration play
-  hosts: web
-  user: ubuntu
+- hosts: web
   gather_facts: false
-  vars:
-    - ansible_python_interpreter: /usr/bin/python3
-    - ansible_host_key_checking: false
-    - ansible_stdout_callback: yaml
-
+  tasks:
+  - name: configuration play
+    user: ubuntu
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+      - ansible_host_key_checking: false
+      - ansible_stdout_callback: yaml
+  - name: Wait 300 seconds, but only start checking after 60 seconds
+    wait_for_connection:
+    delay: 60
+    timeout: 300
   
-  roles:
-  - configure-server
+    roles:
+    - configure-server
