@@ -69,7 +69,7 @@ jobs:
              cd backend
              npm i
              npm run build
-             no_output_timeout: 30m
+          no_output_timeout: 30m
              
              
 
@@ -90,7 +90,7 @@ jobs:
             cd frontend
             npm i
             npm run test
-            no_output_timeout: 30m
+          no_output_timeout: 30m
    
                 
   test-backend:
@@ -106,7 +106,7 @@ jobs:
             cd backend
             npm i
             npm test
-            no_output_timeout: 30m
+          no_output_timeout: 30m
 #     - slack/notify:
 #         event: fail
 #         template: basic_fail_1
@@ -127,7 +127,7 @@ jobs:
             cd frontend
             npm i
             npm audit fix --audit-level=critical --force
-            no_output_timeout: 30m
+          no_output_timeout: 30m
 #            npm audit --audit-level=critical
 
   
@@ -144,7 +144,7 @@ jobs:
             cd backend
             npm install --no-fund
             npm audit fix --audit-level=critical --force
-            no_output_timeout: 30m
+          no_output_timeout: 30m
 #            npm audit --audit-level=critical
 
      
@@ -172,7 +172,7 @@ jobs:
               --tags ramProject3=front-end \
               --stack-name "front-end-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
-            no_output_timeout: 30m
+          no_output_timeout: 30m
 
       - run:
           name: Add back-end ip to ansible inventory
@@ -223,7 +223,7 @@ jobs:
           name: Configure server
           command: |
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
-            no_output_timeout: 30m
+          no_output_timeout: 30m
 #            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
 #            exit 1
       # Here's where you will add some code to rollback on failure      
