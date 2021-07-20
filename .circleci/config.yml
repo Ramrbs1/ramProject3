@@ -6,14 +6,16 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      # Add parameter here   
+      WORKFLOW_ID:
+        Type: "string" 
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws cloudformation delete-stack --stack-name front-end-<<parameters.WORKFLOW_ID>>
+            aws cloudformation delete-stack --stack-name back-end-<<parameters.WORKFLOW_ID>>
+#            exit 1
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -22,16 +24,15 @@ commands:
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
+            SUCCESS = $(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Project_3_Migration)
             if(( $SUCCESS==1 )); 
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+              cd ~/project/backend
+              npm install
+              npm run migrations:revert
             fi
             
 jobs:
@@ -189,13 +190,8 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure   
-#      - run: return 1
-#      - run:
-#          name: Destroy environment
-#          command: |
-#            aws cloudformation delete-stack --stack-name front-end-${CIRCLE_WORKFLOW_ID}
-#            aws cloudformation delete-stack --stack-name back-end-${CIRCLE_WORKFLOW_ID}
-#          when: on_fail
+     - destroy-environment:
+         WORKFLOW_ID: ${CIRCLE_WORKFLOW_ID}
       
 #
   configure-infrastructure:
@@ -224,33 +220,46 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
-#          no_output_timeout: 30m
-#            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
-#            exit 1
-      # Here's where you will add some code to rollback on failure      
+          no_output_timeout: 30m
+
+      - destroy-environment:
+          WORKFLOW_ID: ${CIRCLE_WORKFLOW_ID}      
 #
-#  run-migrations:
-#    docker:
-#      # Docker image here that supports NodeJS
-#    steps:
-#      # Checkout code from git
-#      - run:
-#          name: Run migrations
-#          command: |
-#            # Your code here
-#            exit 1
-#      - run:
-#          name: Send migration results to memstash
-#          command: |
-#            # Your code here
-#            exit 1
-#     # Here's where you will add some code to rollback on failure      
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations > ~/project/backend/Ram_migrations.txt
+      - run:
+          name: Send migration results to memstash
+          command: |
+            cd ~/project/backend
+            grep -q "has been executed successfully" Ram_migrations.txt
+            if [ $? -eq 0 ]
+              then
+                echo "Migration is Succesfullly Completed"
+                echo "Placing 1 to migration_${CIRCLE_WORKFLOW_ID}"
+                curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "1" https://api.memstash.io/values/Project_3_Migration
+              else
+                echo "Migration is Failed Try again"
+                echo "Placing 0 to migration_${CIRCLE_WORKFLOW_ID}"
+                curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "0" https://api.memstash.io/values/Project_3_Migration
+            fi
+
+      - destroy-environment:
+          WORKFLOW_ID: ${CIRCLE_WORKFLOW_ID}    
 #
 #  deploy-frontend:
 #    docker:
-#      # Docker image here that supports AWS CLI
+#      - image: amazon/aws-cli
 #    steps:
-#      # Checkout code from git
+#      - checkout
 #      - run:
 #          name: Install dependencies
 #          command: |
@@ -362,8 +371,8 @@ workflows:
               only: [master]
       - configure-infrastructure:
          requires: [deploy-infrastructure]
-#      - run-migrations:
-#          requires: [configure-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
 #      - deploy-frontend:
 #          requires: [run-migrations]
 #      - deploy-backend:
