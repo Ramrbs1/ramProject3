@@ -162,7 +162,7 @@ jobs:
               --tags ramProject3=back-end \
               --stack-name "back-end-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
-            no_output_timeout: 30m              
+          no_output_timeout: 30m              
 #              exit 1
       - run:
           name: Ensure front-end infrastructure exist
