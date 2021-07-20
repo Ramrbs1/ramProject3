@@ -202,7 +202,7 @@ jobs:
             apk add --update git #Insatll git
       - checkout
       - add_ssh_keys:
-          fingerprints: ["3a:48:6b:9b:08:f1:36:88:33:f6:1e:7a:52:e1:4e:41"] # You can get this ID in the section where you registered the SSH Key
+          fingerprints: ["9c:d2:37:0e:cd:85:5e:52:bd:35:c3:93:0c:eb:f4:90"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: ~/
       - run : |
