@@ -35,10 +35,10 @@
     src: /root/project/backend.tar.gz
     dest: /home/ubuntu/
  
-- name: "install dependencies"
+- name: "install dependencies again"
   become: true
   command: |
-    npm run build
+    npm install -g n
     n latest
     npm install -g npm
   args: 

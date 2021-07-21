@@ -18,8 +18,6 @@ commands:
             aws cloudformation delete-stack --stack-name back-end-<<parameters.workflow_id>>
             # deleting the s3 bucket and object from the initial s3 bucket
             aws s3 rb s3://udapeople-<<parameters.workflow_id>> --force
-            #aws s3 rm --recursive s3://udapeople-ra1k061yhdkclt198
-#            exit 1
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.     
@@ -282,6 +280,7 @@ jobs:
             fi
             
       #- revert-migrations
+
 #      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 
@@ -381,8 +380,8 @@ jobs:
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
           no_output_timeout: 30m
 
-#      - destroy-environment:
-#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 #
       # Here's where you will add some code to rollback on failure  
 
@@ -437,20 +436,21 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure  
 #
-#  cloudfront-update:
-#    docker:
-#      # Docker image here that supports AWS CLI
-#    steps:
-#      # Checkout code from git
-#      - run:
-#          name: Install dependencies
-#          command: |
-#            # your code here
-#      - run:
-#          name: Update cloudfront distribution
-#          command: |
-#            # your code here
-#      # Here's where you will add some code to rollback on failure  
+  cloudfront-update:
+    docker:
+       - image: amazon/aws-cli
+      # Docker image here that supports AWS CLI
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y curl tar gzip
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure  
 #
 #cleanup:
 #    docker:
