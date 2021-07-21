@@ -337,11 +337,8 @@ jobs:
           command: |
             apk add --update openssh-client #Insatll ssh
             apk add --update git #Insatll git
-            #apk add --update tar
-            #apk add --update gzip
-            #apk add --update curl
+            apk add --update tar gzip curl nodejs tree
             apk add --update npm
-            #apk add tree
             pip install awscli # install aws cli
             
       # Checkout code from git

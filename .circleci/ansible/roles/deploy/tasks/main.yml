@@ -29,18 +29,12 @@
     production: yes
     state: present
 
-- name: Creates directory
-  become: yes
-  file:
-    path: /home/ubuntu/backend
-    state: directory
 
-- name: Copy beckend files
-  become: yes 
-  copy:
-    src: /root/project/backend/dist
-    dest: /home/ubuntu/backend
-    owner: ubuntu
+- name: Unarchive backend files
+  become: yes
+  unarchive:
+    src: /root/project/backend.tar.gz
+    dest: /home/ubuntu
     
 - name: build node
   shell: |
