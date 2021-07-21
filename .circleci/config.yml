@@ -16,9 +16,9 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name front-end-<<parameters.workflow_id>>
             aws cloudformation delete-stack --stack-name back-end-<<parameters.workflow_id>>
-            # deleting the s3 bucket and object from th einitial s3 bucket
-            #aws s3 rb s3://udapeople-<<parameters.workflow_id>> --force
-            aws s3 rm --recursive s3://udapeople-ra1k061yhdkclt198
+            # deleting the s3 bucket and object from the initial s3 bucket
+            aws s3 rb s3://udapeople-<<parameters.workflow_id>> --force
+            #aws s3 rm --recursive s3://udapeople-ra1k061yhdkclt198
 #            exit 1
 
   revert-migrations:
@@ -163,8 +163,8 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml --region=us-east-1 \
               --tags ramProject3=back-end \
-              --stack-name "back-end-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
+              --stack-name "back-end-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
           no_output_timeout: 30m              
 #              exit 1
       - run:
@@ -173,8 +173,8 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml --region=us-east-1 \
               --tags ramProject3=front-end \
-              --stack-name "front-end-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+              --stack-name "front-end-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
           no_output_timeout: 30m
 
       - run:
@@ -193,7 +193,7 @@ jobs:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure   
       - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       
 #
   configure-infrastructure:
@@ -242,7 +242,7 @@ jobs:
           no_output_timeout: 30m
 
 #      - destroy-environment:
-#          workflow_id: ${CIRCLE_WORKFLOW_ID}      
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
 #
   run-migrations:
     docker:
@@ -273,17 +273,17 @@ jobs:
             if [ $? -eq 0 ]
               then
                 echo "Migration is Succesfullly Completed"
-                echo "Placing 1 to migration_${CIRCLE_WORKFLOW_ID}"
+                echo "Placing 1 to migration_${CIRCLE_WORKFLOW_ID:0:7}"
                 curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "1" https://api.memstash.io/values/Project_3_Migration
               else
                 echo "Migration is Failed Try again"
-                echo "Placing 0 to migration_${CIRCLE_WORKFLOW_ID}"
+                echo "Placing 0 to migration_${CIRCLE_WORKFLOW_ID:0:7}"
                 curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "0" https://api.memstash.io/values/Project_3_Migration
             fi
             
       #- revert-migrations
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}    
+#      - destroy-environment:
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 
   deploy-frontend:
     docker:
@@ -306,8 +306,8 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            #BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}" --output text)
-            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}" --output text)
+            #BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
@@ -320,11 +320,11 @@ jobs:
             cd frontend
             npm install
             npm run build
-            aws s3 cp --recursive ./dist/ s3://udapeople-${CIRCLE_WORKFLOW_ID} --acl public-read
+            aws s3 cp --recursive ./dist/ s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
            
             
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
+#      - destroy-environment:
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 #      # Here's where you will add some code to rollback on failure      
 #                    
   deploy-backend:
@@ -381,9 +381,9 @@ jobs:
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
           no_output_timeout: 30m
 
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
-
+#      - destroy-environment:
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+#
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
@@ -427,7 +427,7 @@ jobs:
           name: Frontend smoke test.
           command: |
             # your code here
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-east-1.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
             echo Frontend_URL: ${URL}
             if curl -s ${URL} | grep "Welcome"
             then
@@ -487,19 +487,19 @@ workflows:
           requires: [build-frontend]
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [master]
-#      - configure-infrastructure:
-#         requires: [deploy-infrastructure]
-#      - run-migrations:
-#          requires: [configure-infrastructure]
-#      - deploy-frontend:
-#          requires: [run-migrations]
-#      - deploy-backend:
-#          requires: [run-migrations]
-#      - smoke-test:
-#         requires: [deploy-backend, deploy-frontend]
+          filters:
+            branches:
+              only: [master]
+      - configure-infrastructure:
+         requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+         requires: [deploy-backend, deploy-frontend]
 #      - cloudfront-update:
 #          requires: [smoke-test]
 #      - cleanup:
