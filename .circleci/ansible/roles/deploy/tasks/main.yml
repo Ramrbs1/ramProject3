@@ -31,10 +31,9 @@
 
 
 - name: Unarchive backend files
-  become: yes
   unarchive:
     src: /root/project/backend.tar.gz
-    dest: /home/ubuntu
+    dest: /home/ubuntu/
     
 - name: build node
   shell: |
