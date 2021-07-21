@@ -385,20 +385,32 @@ jobs:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
 
       # Here's where you will add some code to rollback on failure  
-#
+
 #  smoke-test:
 #    docker:
+#     - image: python:3.7-alpine3.11
 #      # Lightweight Docker image 
+#
 #    steps:
+#      - run:
+#          name: Install dependencies ssh and git and aws cli
+#          command: |
+#            apk add --update openssh-client #Insatll ssh
+#            apk add --update git #Insatll git
+#            apk add --update tar gzip curl nodejs tree
+#            apk add --update npm
+#            pip install awscli # install aws cli
 #      # Checkout code from git
+#      - checkout
+#      - attach_workspace:
+#          at: ~/
+#          
 #      - run:
-#          name: Install dependencies
+#          name: Get backend url fro back end smoke test
 #          command: |
-#            # your code here
-#      - run:
-#          name: Get backend url
-#          command: |
-#            # your code here
+#            BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
+#            export API_URL="http://${BACKEND_IP}:3030"
+#            echo "${API_URL}"
 #      - run:
 #          name: Backend smoke test.
 #          command: |
@@ -406,8 +418,8 @@ jobs:
 #      - run:
 #          name: Frontend smoke test.
 #          command: |
-#            # your code here
-#      # Here's where you will add some code to rollback on failure  
+            # your code here
+      # Here's where you will add some code to rollback on failure  
 #
 #  cloudfront-update:
 #    docker:

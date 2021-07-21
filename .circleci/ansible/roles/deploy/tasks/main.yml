@@ -36,13 +36,16 @@
     dest: /home/ubuntu/
     
 - name: build node
+  become: yes
   shell: |
     cd /home/ubuntu/backend
-    npm install
+    npm install -g npm@latest
+    npm audit fix --audit-level=critical --force
     npm run build
     
     
 - name: Executing node
+  become: yes
   shell: |
     cd /home/ubuntu/backend
     pm2 start npm --name backend -- start
