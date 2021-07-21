@@ -1,9 +1,73 @@
 version: 2.1
 orbs:
-  slack: circleci/slack@4.1
+  slack: circleci/slack@4.2.0
   aws-cli: circleci/aws-cli@2.0.3
 
 commands:
+
+  slack-failure:
+    description: sending falure notifications on slack
+    steps:
+      - slack/notify:
+          event: fail
+          custom: |
+            {
+              "text": "",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *Failure* #${CIRCLE_BUILD_NUM} `${CIRCLE_PROJECT_REPONAME}` on `${CIRCLE_BRANCH}`"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Job"
+                      },
+                      "url": "${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                }
+              ]
+            }
+  slack-success:
+    description: sending succeeded notifications on slack
+    steps:
+      - slack/notify:
+          event: pass
+          custom: |
+            {
+              "text": "",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Success* #${CIRCLE_BUILD_NUM} `${CIRCLE_PROJECT_REPONAME}` on `${CIRCLE_BRANCH}`"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Job"
+                      },
+                      "url": "${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                }
+              ]
+            }
+
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -447,30 +511,49 @@ jobs:
           command: |
             yum install -y curl tar gzip
       - run:
+          name: Save Privious workflow ID (before clodufront update run)
+          command: |
+            OldWorkflowId=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
+            echo "Old workflow ID  is ${OldWorkflowId}"
+            if [ ! -z $OldWorkflowId ]
+            then
+              curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data ${OldWorkflowId} https://api.memstash.io/values/Privious_workflow_id
+            fi
+      - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
+            aws cloudformation deploy \
+              --stack-name udapeople-cloudfront \
+              --template-file .circleci/files/cloudfront.yml \
+              --region us-east-1 \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID}" \
+              --tags project=Udapeople
       # Here's where you will add some code to rollback on failure  
 #
 #cleanup:
-#    docker:
-#      # Docker image here
-#    steps:
-#      # Checkout code from git
-#      - run:
-#          name: Get old stack workflow id
-#          command: |
-#            # your code here
-#            export OldWorkflowID="the id here"
-#            export STACKS=[] #put the list of stacks here
-#      - run:
-#          name: Remove old stacks and files
-#          command: |
-#            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#            then
-#              # your code here
-#            fi
-            
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - run:
+          name: Get old stack workflow id
+          command: |
+            export OldWorkflowId=$(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Privious_workflow_id)
+            echo "Privious_workflow_id is ${OldWorkflowId}"
+            export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text
+            echo " Privious Stacks are ${STACKS}
+      - run:
+          name: Remove old stacks and files
+          command: |
+            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            then
+              aws s3 rm s3://udapeople-${OldWorkflowId}/ --recursive
+              aws cloudformation delete-stack --stack-name front-end-${OldWorkflowId}
+              aws cloudformation delete-stack --stack-name back-end-${OldWorkflowId}
+            else
+              echo "No stack deleted"
+            fi
+           
 
 workflows:
   default:
