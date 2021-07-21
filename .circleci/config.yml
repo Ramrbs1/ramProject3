@@ -29,7 +29,7 @@ commands:
             SUCCESS = $(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Project_3_Migration)
             if(( $SUCCESS==1 )); 
             then
-              cd ~/project/backend
+              cd backend
               npm install
               npm run migrations:revert
             fi
@@ -198,10 +198,12 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - run:
-          name: Install ssh and git
+          name: Install ssh and git and aws cli
           command: |
             apk add --update openssh-client #Insatll ssh
             apk add --update git #Insatll git
+            apk add --update awscli # install aws cli
+            
       - checkout
       - add_ssh_keys:
           fingerprints: ["9c:d2:37:0e:cd:85:5e:52:bd:35:c3:93:0c:eb:f4:90"] # You can get this ID in the section where you registered the SSH Key
@@ -215,20 +217,20 @@ jobs:
             apk add --update ansible #install the dependencies needed for your playbook
 #            exit 1
       - run:
-          name: add value in the ~/project/backend/.env file
+          name: add value in the backend/.env file
           command: |
-            >~/project/backend/.env
-            echo NODE_ENV=test >> "~/project/backend/.env"
-            echo ENVIRONMENT=production >> "~/project/backend/.env"
-            echo TYPEORM_CONNECTION=postgres >> "~/project/backend/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "~/project/backend/.env"
-            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "~/project/backend/.env"
-            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "~/project/backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "~/project/backend/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "~/project/backend/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "~/project/backend/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "~/project/backend/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "~/project/backend/.env"
+            >backend/.env
+            echo NODE_ENV=test >> "backend/.env"
+            echo ENVIRONMENT=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "/backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
       - run:
           name: Configure server
           command: |
@@ -256,15 +258,15 @@ jobs:
             npm install --no-fund
             npm audit fix --audit-level=critical
             npm run migrations:revert
-            npm run migrations > ~/project/backend/Ram_migrations.txt
-            cat ~/project/backend/Ram_migrations.txt
+            npm run migrations > Ram_migrations.txt
+            cat Ram_migrations.txt
           no_output_timeout: 30m
       - run:
           name: Send migration results to memstash
           command: |
-            #cd ~/project/backend
-            tail -10 ~/project/backend/Ram_migrations.txt
-            grep  "has been executed successfully" ~/project/backend/Ram_migrations.txt
+            cd backend
+            tail -10 Ram_migrations.txt
+            grep  "has been executed successfully" Ram_migrations.txt
             if [ $? -eq 0 ]
               then
                 echo "Migration is Succesfullly Completed"
