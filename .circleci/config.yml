@@ -16,6 +16,9 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name front-end-<<parameters.workflow_id>>
             aws cloudformation delete-stack --stack-name back-end-<<parameters.workflow_id>>
+            # deleting the s3 bucket and object from th einitial s3 bucket
+            #aws s3 rb s3://udapeople-<<parameters.workflow_id>> --force
+            aws s3 rm --recursive s3://udapeople-ra1k061yhdkclt198
 #            exit 1
 
   revert-migrations:
@@ -202,7 +205,7 @@ jobs:
           command: |
             apk add --update openssh-client #Insatll ssh
             apk add --update git #Insatll git
-            #apk add --update awscli # install aws cli
+            pip install awscli # install aws cli
             
       - checkout
       - add_ssh_keys:
@@ -317,28 +320,72 @@ jobs:
             cd frontend
             npm install
             npm run build
-            aws s3 cp --recursive ./dist/ s3://udapeople-ra1k061yhdkclt198
+            aws s3 cp --recursive ./dist/ s3://udapeople-ra1k061yhdkclt198 --acl public-read
+           
             
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID}
 #      # Here's where you will add some code to rollback on failure      
 #                    
-#  deploy-backend:
-#    docker:
-#      # Docker image here that supports Ansible
-#    steps:
-#      # Checkout code from git
-#      # Add ssh keys with fingerprint
-#      # attach workspace
-#      - run:
-#          name: Install dependencies
-#          command: |
-#            # your code here
-#      - run:
-#          name: Deploy backend
-#          command: |
-#            # your code here
-#      # Here's where you will add some code to rollback on failure  
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+      # Docker image here that supports Ansible
+    steps:
+      - run:
+          name: Install ssh and git and aws cli
+          command: |
+            apk add --update openssh-client #Insatll ssh
+            apk add --update git #Insatll git
+            #apk add --update tar
+            #apk add --update gzip
+            #apk add --update curl
+            apk add --update npm
+            #apk add tree
+            pip install awscli # install aws cli
+            
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["9c:d2:37:0e:cd:85:5e:52:bd:35:c3:93:0c:eb:f4:90"] # You can get this ID in the section where you registered the SSH Key
+      - attach_workspace:
+          at: ~/
+      - run : |
+          cat ~/project/.circleci/ansible/inventory.txt
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            apk add --update ansible #install the dependencies needed for your playbook
+
+      - run:
+          name: add value in the backend/.env file
+          command: |
+            >backend/.env
+            echo NODE_ENV=test >> "backend/.env"
+            echo ENVIRONMENT=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+      - run:
+          name: Deploy backend
+          command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+          no_output_timeout: 30m
+
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
+
+      # Here's where you will add some code to rollback on failure  
 #
 #  smoke-test:
 #    docker:
@@ -422,8 +469,8 @@ workflows:
           requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
-#      - deploy-backend:
-#          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
 #      - smoke-test:
 #          requires: [deploy-backend, deploy-frontend]
 #      - cloudfront-update:
