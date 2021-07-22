@@ -187,7 +187,7 @@ jobs:
             npm i
             npm test
           no_output_timeout: 30m
-            - notify-failure
+        
       - slack-failure
       - slack-success
 
