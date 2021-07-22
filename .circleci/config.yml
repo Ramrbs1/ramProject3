@@ -527,7 +527,7 @@ jobs:
             yum install -y curl tar gzip
 
       - run:
-          name: store workflow ID befor updating cloudfront 
+          name: store workflow ID before updating cloudfront 
           command: |
             OldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
             echo "Old workflow ID  is ${OldWorkflowID}"
