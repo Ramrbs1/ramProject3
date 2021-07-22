@@ -91,8 +91,8 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = $(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Project_3_Migration)
-            if(( $SUCCESS==1 )); 
+            SUCCESS =`(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Project_3_Migration)`
+            if[ $SUCCESS -eq 1]; 
             then
               cd backend
               npm install
@@ -303,7 +303,7 @@ jobs:
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
           no_output_timeout: 30m
 
-#      - destroy-environment:
+      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
 #
   run-migrations:
@@ -478,7 +478,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            curl -ivs ${API_URL}/api/status  > /dev/null 2>&1
+            curl -ivs ${API_URL}/api/status 
             if [ $? -eq 0 ]
                 then
                     echo "backend smoke test passed"
@@ -501,8 +501,8 @@ jobs:
             fi
             
       - revert-migrations
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}                
+#      - destroy-environment:
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}                
       # Here's where you will add some code to rollback on failure  
 #
   cloudfront-update:
@@ -571,16 +571,16 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
+#      - build-frontend
+#      - build-backend
+#      - test-frontend:
+#          requires: [build-frontend]
+#      - test-backend:
+#          requires: [build-backend]
+#      - scan-backend:
+#          requires: [build-backend]
+#      - scan-frontend:
+#          requires: [build-frontend]
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
