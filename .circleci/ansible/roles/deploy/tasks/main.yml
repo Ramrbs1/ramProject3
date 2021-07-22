@@ -1,25 +1,31 @@
 ---
-- name: "update apt packages."
-  become: yes
-  apt:
-    update_cache: yes
-
-- name: "upgrade packages"
-  become: yes
-  apt:
-    upgrade: yes
-
-- name: remove dependencies that are no longer required
-  become: yes
-  apt:
-    autoremove: yes
-
-- name: "install dependencies."
-  become: yes
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
-    update_cache: yes
+#- name: "update apt packages."
+#  become: yes
+#  apt:
+#    update_cache: yes
+#
+#- name: "upgrade packages"
+#  become: yes
+#  apt:
+#    upgrade: yes
+#
+#- name: remove dependencies that are no longer required
+#  become: yes
+#  apt:
+#    autoremove: yes
+#
+#- name: "install dependencies."
+#  become: yes
+#  apt:
+#    name: ["nodejs", "npm"]
+#    state: latest
+#    update_cache: yes
+    
+- name: "install node 12.X"
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+    sudo apt -y upgrade
+    sudo apt install -y nodejs
 
 - name: "install pm2"
   become: yes
@@ -35,30 +41,14 @@
     src: /root/project/backend.tar.gz
     dest: /home/ubuntu/
  
-- name: "install dependencies and npm "
+- name: "install  npm "
   become: true
   command: |
-        sudo npm install -g n
-        sudo n latest
-        sudo npm install -g npm
-        hash -d npm
-        npm i
-  args: 
+    npm install
+  args:
     chdir: /home/ubuntu/backend
     
-#- name: "install dependencies again"
-#  become: yes
-#  apt:
-#    name: ["nodejs", "npm"]
-#    state: latest
-#    update_cache: yes
-#    
-#- name: "install NPM"
-#  command: npm i
-#  args: 
-#    chdir: /home/ubuntu/backend
-#    
-#       
+
 - name: "NPM Run Build"
   command: npm run build
   args: 
