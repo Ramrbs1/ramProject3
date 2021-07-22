@@ -560,15 +560,13 @@ jobs:
     steps:
       # Checkout code from git
       - run:
-          name: Get old stack workflow id
+          name: Get old stack workflow id and delete the old s3 bucket and stacks 
           command: |
             export OldWorkflowID=$(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/workflow_ID)
             echo "Privious_workflow_id is ${OldWorkflowID}"
             export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text)
             echo " Privious Stacks are ${STACKS}"
-      - run:
-          name: Remove old stacks and files
-          command: |
+            # deleting the old s3 bucket and stacks
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
               echo "starting operations for OldWorkflowID=${OldWorkflowID}"
@@ -578,6 +576,10 @@ jobs:
             else
               echo "No stack deleted"
             fi
+            
+#      - run:
+ #         name: Remove old stacks and files
+ #         command: |
 
 workflows:
   default:
