@@ -35,28 +35,30 @@
     src: /root/project/backend.tar.gz
     dest: /home/ubuntu/
  
-#- name: "install dependencies again"
-#  become: true
-#  command: |
-#    npm install -g n
-#    n latest
-#    npm install -g npm
-#  args: 
-#    chdir: /home/ubuntu/backend
-    
-- name: "install dependencies again"
-  become: yes
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
-    update_cache: yes
-    
-- name: "install NPM"
-  command: npm i
+- name: "install dependencies and npm "
+  become: true
+  command: |
+        sudo npm install -g n
+        sudo n latest
+        sudo npm install -g npm
+        hash -d npm
+        npm i
   args: 
     chdir: /home/ubuntu/backend
     
-       
+#- name: "install dependencies again"
+#  become: yes
+#  apt:
+#    name: ["nodejs", "npm"]
+#    state: latest
+#    update_cache: yes
+#    
+#- name: "install NPM"
+#  command: npm i
+#  args: 
+#    chdir: /home/ubuntu/backend
+#    
+#       
 - name: "NPM Run Build"
   command: npm run build
   args: 
