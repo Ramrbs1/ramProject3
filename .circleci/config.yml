@@ -337,7 +337,7 @@ jobs:
             cd backend
             npm install --no-fund
             npm audit fix --audit-level=critical
-            #npm run migrations:revert
+            npm run migrations:revert
             npm run migrations > Ram_migrations.txt
             cat Ram_migrations.txt
           no_output_timeout: 30m
