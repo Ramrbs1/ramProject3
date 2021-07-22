@@ -510,15 +510,8 @@ jobs:
           name: Install dependencies
           command: |
             yum install -y curl tar gzip
-      - run:
-          name: Save Privious workflow ID (before clodufront update run)
-          command: |
-            OldWorkflowId=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
-            echo "Old workflow ID  is ${OldWorkflowId}"
-            if [ ! -z $OldWorkflowId ]
-            then
-              curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data ${OldWorkflowId} https://api.memstash.io/values/Privious_workflow_id
-            fi
+
+            
       - run:
           name: Update cloudfront distribution
           command: |
@@ -526,8 +519,20 @@ jobs:
               --stack-name udapeople-cloudfront \
               --template-file .circleci/files/cloudfront.yml \
               --region us-east-1 \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID}" \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=Udapeople
+      - run:
+          name: store workflow ID 
+          command: |
+            OldWorkflowId=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
+            echo "Old workflow ID  is ${OldWorkflowId}"
+            if [ ! -z $OldWorkflowId ]
+            then
+              curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data ${OldWorkflowId} https://api.memstash.io/values/workflow_id
+            else
+              echo "No WorkflowID found"
+              return 1
+            fi
       # Here's where you will add some code to rollback on failure  
 #
   cleanup:
@@ -538,9 +543,9 @@ jobs:
       - run:
           name: Get old stack workflow id
           command: |
-            export OldWorkflowId=$(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/Privious_workflow_id)
+            export OldWorkflowId=$(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/workflow_id)
             echo "Privious_workflow_id is ${OldWorkflowId}"
-            export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text
+            export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text)
             echo " Privious Stacks are ${STACKS}
       - run:
           name: Remove old stacks and files
@@ -558,40 +563,40 @@ jobs:
 workflows:
   default:
     jobs:
-#      - build-frontend
-#      - build-backend
-#      - test-frontend:
-#          requires: [build-frontend]
-#      - test-backend:
-#          requires: [build-backend]
-#      - scan-backend:
-#          requires: [build-backend]
-#      - scan-frontend:
-#          requires: [build-frontend]
-#      - deploy-infrastructure:
-#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [master]
-#      - configure-infrastructure:
-#         requires: [deploy-infrastructure]
-#      - run-migrations:
-#          requires: [configure-infrastructure]
-#      - deploy-frontend:
-#          requires: [run-migrations]
-#      - deploy-backend:
-#          requires: [run-migrations]
-#      - smoke-test:
-#         requires: [deploy-backend, deploy-frontend]
-#      - cloudfront-update:
-#          requires: [smoke-test]
-#      - cleanup:
-#          requires: [cloudfront-update]
-      - deploy-infrastructure
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
       - configure-infrastructure:
-          requires: [deploy-infrastructure]
+         requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
       - deploy-backend:
-          requires: [configure-infrastructure]
+          requires: [run-migrations]
+      - smoke-test:
+         requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
+#      - deploy-infrastructure
+#      - configure-infrastructure:
+#          requires: [deploy-infrastructure]
+#      - deploy-frontend:
+#          requires: [configure-infrastructure]
+#      - deploy-backend:
+#          requires: [configure-infrastructure]
       
