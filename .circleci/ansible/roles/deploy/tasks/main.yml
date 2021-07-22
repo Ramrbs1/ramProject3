@@ -52,9 +52,7 @@
     update_cache: yes
     
 - name: "install NPM"
-  command: |
-    #hash -d npm
-    npm i
+  command: npm i
   args: 
     chdir: /home/ubuntu/backend
     
