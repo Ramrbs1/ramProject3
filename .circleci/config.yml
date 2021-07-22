@@ -343,7 +343,7 @@ jobs:
                 curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "0" https://api.memstash.io/values/Project_3_Migration
             fi
             
-#      - revert-migrations
+      - revert-migrations
 #      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 
@@ -385,7 +385,7 @@ jobs:
             aws s3 cp --recursive ./dist/ s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
            
             
-#      - revert-migrations
+      - revert-migrations
 #      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 #      # Here's where you will add some code to rollback on failure      
@@ -444,7 +444,7 @@ jobs:
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
           no_output_timeout: 30m
 
-#      - revert-migrations
+      - revert-migrations
 #      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 #
@@ -516,7 +516,7 @@ jobs:
           command: |
             yum install -y curl tar gzip
 
-       - run:
+      - run:
           name: store workflow ID befor updating cloudfront 
           command: |
             OldWorkflowId=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
@@ -538,7 +538,7 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=Udapeople
               
-#      - revert-migrations
+      - revert-migrations
 #      - destroy-environment:
 #          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
       # Here's where you will add some code to rollback on failure  
