@@ -228,8 +228,6 @@ jobs:
       - slack-success
 
 
-     
-
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -244,7 +242,6 @@ jobs:
               --stack-name "back-end-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
           no_output_timeout: 30m 
-          
 
       - run:
           name: Ensure front-end infrastructure exist
@@ -264,17 +261,12 @@ jobs:
             aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
 #            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
-            
 
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      - slack-failure
-      - slack-success
-            
-            
-      # Here's where you will add some code to rollback on failure   
+
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       
@@ -323,9 +315,7 @@ jobs:
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
           no_output_timeout: 30m
-      - slack-failure
-      - slack-success          
-
+       
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
@@ -368,10 +358,7 @@ jobs:
                 curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "0" https://api.memstash.io/values/Project_3_Migration
             fi
             #exit 1 # to check the rollback
-           
-      - slack-failure
-      - slack-success
-   
+
       - revert-migrations
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}  
@@ -413,10 +400,7 @@ jobs:
             npm install
             npm run build
             aws s3 cp --recursive ./dist/ s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
-           
-      - slack-failure
-      - slack-success
-      
+        
       - revert-migrations
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
@@ -474,9 +458,7 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
-          no_output_timeout: 30m
-      - slack-failure
-      - slack-success          
+          no_output_timeout: 30m   
 
       - revert-migrations
       - destroy-environment:
@@ -514,7 +496,6 @@ jobs:
           command: |
             if curl -is ${API_URL}/api/status|grep "200" ; then  echo "backend smoke test passed"; else echo "backend smoke test failed"; fi
 
-
       - run:
           name: Frontend smoke test.
           command: |
@@ -528,9 +509,7 @@ jobs:
             else
               return 1
             fi
-      - slack-failure
-      - slack-success
-      
+
       - revert-migrations
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}                
@@ -570,9 +549,6 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=Udapeople
               
-      - slack-failure
-      - slack-success  
-      
       - revert-migrations
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
@@ -601,8 +577,6 @@ jobs:
             else
               echo "No stack deleted"
             fi
-      - slack-failure
-      - slack-success           
 
 workflows:
   default:
