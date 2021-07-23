@@ -1,5 +1,9 @@
 Description: >
+<<<<<<< Updated upstream
   Ram kumar UdaPeople frontend stack.
+=======
+  UdaPeople frontend stack.
+>>>>>>> Stashed changes
 
 Parameters:
   ID:

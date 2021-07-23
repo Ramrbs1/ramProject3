@@ -1,4 +1,5 @@
 version: 2.1
+<<<<<<< Updated upstream
 orbs:
   slack: circleci/slack@4.2.0
   aws-cli: circleci/aws-cli@2.0.3
@@ -73,11 +74,20 @@ commands:
     parameters:
       workflow_id:
         type: "string" 
+=======
+
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    parameters:
+      # Add parameter here   
+>>>>>>> Stashed changes
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
+<<<<<<< Updated upstream
             # deleting the s3 bucket object 
             aws s3 rm s3://udapeople-<<parameters.workflow_id>> --recursive
             aws s3 rb s3://udapeople-<<parameters.workflow_id>> --force
@@ -102,6 +112,28 @@ commands:
               npm run migrations:revert
             else
               echo " No Migration value found at memstash"
+=======
+            # Your code here
+            exit 1
+
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      # Add parameter here     
+    steps:
+      - run:
+          name: Revert migrations
+          # Add when this will run
+          command: |
+            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+            SUCCESS = 1
+            if(( $SUCCESS==1 )); 
+            then
+            #  cd ~/project/backend
+            #  npm install
+            #  Add revert code here. You can find this in the Getting Started section.
+              exit 1
+>>>>>>> Stashed changes
             fi
             
 jobs:
@@ -115,6 +147,7 @@ jobs:
       - run:
           name: Build front-end
           command: |
+<<<<<<< Updated upstream
             cd frontend
             npm i
             npm run build
@@ -128,6 +161,13 @@ jobs:
       - slack-failure
       - slack-success
          
+=======
+            # Your code here
+            exit 1
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
+>>>>>>> Stashed changes
 
   build-backend:
     docker:
@@ -139,6 +179,7 @@ jobs:
       - run:
           name: Back-end build
           command: |
+<<<<<<< Updated upstream
              cd backend
              npm i
              npm run build
@@ -233,20 +274,74 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+=======
+             # Your code here
+             exit 1
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+
+  test-frontend:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      # Restore from cache
+      # Your job code here
+                
+  test-backend:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      # Restore from cache
+      # Your job code here
+            
+  scan-frontend:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      # Restore from cache
+      # Your job code here
+
+  scan-backend:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      # Restore from cache
+      # Your job code here
+
+  deploy-infrastructure:
+    docker:
+      # Docker image here that supports AWS CLI
+    steps:
+      # Checkout code from git
+>>>>>>> Stashed changes
       - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
+<<<<<<< Updated upstream
               --template-file .circleci/files/backend.yml --region=us-east-1 \
               --tags ramProject3=back-end \
               --stack-name "back-end-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
           no_output_timeout: 30m 
 
+=======
+              --template-file .circleci/files/backend.yml \
+              #--tags project=your-tag \
+              # --stack-name "your back-end stack name with workflow id" \
+              # --parameter-overrides ID="your workflow id"  
+              exit 1
+>>>>>>> Stashed changes
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
+<<<<<<< Updated upstream
               --template-file .circleci/files/frontend.yml --region=us-east-1 \
               --tags ramProject3=front-end \
               --stack-name "front-end-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -262,10 +357,23 @@ jobs:
             cat ~/project/.circleci/ansible/inventory.txt
 #            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
 
+=======
+              --template-file .circleci/files/frontend.yml \
+              #--tags project=your-tag \
+              # --stack-name "your front-end stack name with workflow id" \
+              # --parameter-overrides ID="your workflow id"  
+              exit 1
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            # Your code here
+            exit 1
+>>>>>>> Stashed changes
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+<<<<<<< Updated upstream
 
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -430,10 +538,79 @@ jobs:
           at: ~/
       - run : |
           cat ~/project/.circleci/ansible/inventory.txt
+=======
+      # Here's where you will add some code to rollback on failure      
+
+  configure-infrastructure:
+    docker:
+      # Docker image here that supports Ansible
+    steps:
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            # Your code here
+            exit 1
+      - run:
+          name: Configure server
+          command: |
+            # Your code here
+            exit 1
+      # Here's where you will add some code to rollback on failure      
+
+  run-migrations:
+    docker:
+      # Docker image here that supports NodeJS
+    steps:
+      # Checkout code from git
+      - run:
+          name: Run migrations
+          command: |
+            # Your code here
+            exit 1
+      - run:
+          name: Send migration results to memstash
+          command: |
+            # Your code here
+            exit 1
+     # Here's where you will add some code to rollback on failure      
+
+  deploy-frontend:
+    docker:
+      # Docker image here that supports AWS CLI
+    steps:
+      # Checkout code from git
       - run:
           name: Install dependencies
           command: |
             # your code here
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+      - run:
+          name: Deploy frontend objects
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure      
+                    
+  deploy-backend:
+    docker:
+      # Docker image here that supports Ansible
+    steps:
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+>>>>>>> Stashed changes
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+<<<<<<< Updated upstream
             apk add --update ansible #install the dependencies needed for your playbook
 
       - run:
@@ -464,10 +641,17 @@ jobs:
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 #
+=======
+      - run:
+          name: Deploy backend
+          command: |
+            # your code here
+>>>>>>> Stashed changes
       # Here's where you will add some code to rollback on failure  
 
   smoke-test:
     docker:
+<<<<<<< Updated upstream
      - image: python:3.7-alpine3.11
       # Lightweight Docker image 
 
@@ -496,10 +680,28 @@ jobs:
           command: |
             if curl -is ${API_URL}/api/status|grep "200" ; then  echo "backend smoke test passed"; else echo "backend smoke test failed"; fi
 
+=======
+      # Lightweight Docker image 
+    steps:
+      # Checkout code from git
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+      - run:
+          name: Backend smoke test.
+          command: |
+            # your code here
+>>>>>>> Stashed changes
       - run:
           name: Frontend smoke test.
           command: |
             # your code here
+<<<<<<< Updated upstream
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
             echo Frontend_URL: ${URL}
             #if curl -s ${URL} | grep "Welcome"; then  echo "frontend smoke test passed"; else  echo "frontend smoke test failed"; fi
@@ -578,6 +780,45 @@ jobs:
               exit 1
             fi
             
+=======
+      # Here's where you will add some code to rollback on failure  
+
+  cloudfront-update:
+    docker:
+      # Docker image here that supports AWS CLI
+    steps:
+      # Checkout code from git
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure  
+
+cleanup:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      - run:
+          name: Get old stack workflow id
+          command: |
+            # your code here
+            export OldWorkflowID="the id here"
+            export STACKS=[] #put the list of stacks here
+      - run:
+          name: Remove old stacks and files
+          command: |
+            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            then
+              # your code here
+            fi
+            
+
+>>>>>>> Stashed changes
 workflows:
   default:
     jobs:
@@ -595,9 +836,15 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
+<<<<<<< Updated upstream
               only: [master]
       - configure-infrastructure:
          requires: [deploy-infrastructure]
+=======
+              only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+>>>>>>> Stashed changes
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
@@ -605,9 +852,17 @@ workflows:
       - deploy-backend:
           requires: [run-migrations]
       - smoke-test:
+<<<<<<< Updated upstream
          requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
                 
+=======
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
+>>>>>>> Stashed changes
