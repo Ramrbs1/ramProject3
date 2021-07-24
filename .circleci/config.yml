@@ -364,9 +364,11 @@ jobs:
             pwd
             echo " THIS IS .env CONTENTS:"
             cat .env
-            #npm run migrations:revert
+            npm run migrations:revert
             echo "starting Migration" > Ram_migrations.txt
             npm run migrations >> Ram_migrations.txt
+            echo " =========================================="
+            echo "THIS IS Ram_migrations.txt CONTENTS:"
             cat Ram_migrations.txt
           no_output_timeout: 30m
       - run:
