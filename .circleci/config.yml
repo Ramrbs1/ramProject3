@@ -420,11 +420,11 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKENDIP=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicIpAddress"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
-            #BACKENDDNS=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicDnsName"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
+            BACKEND_IP=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicIpAddress"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
+            #BACKEND_DNS=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicDnsName"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
             #BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
             echo ${BACKEND_IP}
-            #echo NODE_ENV=production >> "frontend/.env"
+            echo NODE_ENV=production >> "frontend/.env"
             #echo ENVIRONMENT=production >> "frontend/.env"
             echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"  # to send beckedn url to frontend env
             export API_URL="http://${BACKEND_IP}:3030"
@@ -528,7 +528,8 @@ jobs:
       - run:
           name: Get backend url for back end smoke test
           command: |
-            BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
+            BACKEND_IP=`(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicIpAddress"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)`
+            #BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
       - run:
