@@ -10,8 +10,8 @@
     - ansible_stdout_callback: yaml
     
   environment:
-    NODE_ENV: production
-    #ENVIRONMENT: production
+    #NODE_ENV: production
+    ENVIRONMENT: production
     TYPEORM_CONNECTION: postgres
     TYPEORM_MIGRATIONS_DIR: ./src/migrations
     TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
@@ -21,6 +21,7 @@
     TYPEORM_USERNAME: postgres
     TYPEORM_PASSWORD: postgres
     TYPEORM_DATABASE: project3
+    API_URL: "{{ lookup('env','API_URL') }}"
     
   pre_tasks:
     - name: "wait 600 seconds for target connection to become reachable/usable."

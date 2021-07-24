@@ -300,8 +300,8 @@ jobs:
       - run:
           name: add value in the backend/.env file
           command: |
-            >backend/.env
-            echo NODE_ENV=production >> "backend/.env"
+            touch backend/.env
+            #echo NODE_ENV=production >> "backend/.env"
             echo ENVIRONMENT=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
@@ -343,8 +343,8 @@ jobs:
       - run:
           name: add value in the backend/.env file
           command: |
-            touch backend/.env
-            echo NODE_ENV=production >> "backend/.env"
+            #touch backend/.env
+            #echo NODE_ENV=production >> "backend/.env"
             echo ENVIRONMENT=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
@@ -420,15 +420,16 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            BACKENDIP=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicIpAddress"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
+            #BACKENDDNS=$(aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicDnsName"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text)
             #BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
-            echo $BACKEND_IP}
-            echo NODE_ENV=production >> "frontend//.env"
-            echo ENVIRONMENT=production >> "frontend//.env"
+            echo ${BACKEND_IP}
+            #echo NODE_ENV=production >> "frontend/.env"
+            #echo ENVIRONMENT=production >> "frontend/.env"
             echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"  # to send beckedn url to frontend env
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
+            cat frontend/.env
 
       - run:
           name: Deploy frontend objects
