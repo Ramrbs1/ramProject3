@@ -542,6 +542,7 @@ jobs:
             else
               return 1
             fi
+            exit 1 # to get failed teh smoke test to take the screenshot
 
       - revert-migrations
       - destroy-environment:
