@@ -472,13 +472,14 @@ jobs:
           command: |
             # your code here
             apk add --update ansible #install the dependencies needed for your playbook
+            
 
       - run:
           name: add value in the backend/.env file
           command: |
             
             echo NODE_ENV=production >> "backend/.env"
-            echo ENVIRONMENT=production >> "backend/.env"
+            #echo ENVIRONMENT=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
@@ -493,13 +494,14 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            npm install webpack-dev-server -g
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml
           no_output_timeout: 30m   
 
-      - revert-migrations
-      - destroy-environment:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
+#      - revert-migrations
+#      - destroy-environment:
+#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 #
       # Here's where you will add some code to rollback on failure  
 

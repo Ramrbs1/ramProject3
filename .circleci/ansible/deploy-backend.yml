@@ -11,7 +11,7 @@
     
   environment:
     NODE_ENV: production
-    ENVIRONMENT: production
+    #ENVIRONMENT: production
     TYPEORM_CONNECTION: postgres
     TYPEORM_MIGRATIONS_DIR: ./src/migrations
     TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
