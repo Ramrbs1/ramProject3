@@ -258,7 +258,8 @@ jobs:
           command: |
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
-            aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
+            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text >> ~/project/.circleci/ansible/inventory.txt
+            #aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
 #            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
 
@@ -280,7 +281,7 @@ jobs:
           command: |
             apk add --update openssh-client #Insatll ssh
             apk add --update git #Insatll git
-            pip install awscli # install aws cli
+            
             
       - checkout
       - add_ssh_keys:
@@ -292,7 +293,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible #install the dependencies needed for your playbook
+            apk add --update tar gzip ansible nodejs npm curl #install the dependencies needed for your playbook
+            pip install awscli # install aws cli
 #            exit 1
       - run:
           name: add value in the backend/.env file
@@ -325,20 +327,46 @@ jobs:
     docker:
       - image: circleci/node:13.8.0
     steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - attach_workspace:
+          at: ~/ 
       - run:
           name: Install PIP and aws cli
           command: |
             sudo apt-get install python-pip python-dev
             sudo pip install awscli
-      - checkout
+            pwd
+            ls -la
+      - run:
+          name: add value in the backend/.env file
+          command: |
+            touch backend/.env
+            echo NODE_ENV=production >> "backend/.env"
+            echo ENVIRONMENT=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
       - run:
           name: Run migrations
           command: |
             cd backend
             npm install --no-fund
             npm audit fix --audit-level=critical
-            npm run migrations:revert
-            npm run migrations > Ram_migrations.txt
+            npm run build
+            pwd
+            echo " THIS IS .env CONTENTS:"
+            cat .env
+            #npm run migrations:revert
+            echo "starting Migration" > Ram_migrations.txt
+            npm run migrations >> Ram_migrations.txt
             cat Ram_migrations.txt
           no_output_timeout: 30m
       - run:
@@ -358,6 +386,9 @@ jobs:
                 curl -H "Content-Type: text/plain" -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request PUT --data "0" https://api.memstash.io/values/Project_3_Migration
             fi
             #exit 1 # to check the rollback
+       - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
 
       - revert-migrations
       - destroy-environment:
@@ -385,14 +416,16 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            #BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
+            BACKENDIP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            #BACKENDDNS=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicDnsName' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            #BACKEND_IP=`cat ~/project/.circleci/ansible/inventory.txt|tail -1`
+            echo $BACKEND_IP}
+            echo NODE_ENV=production >> "frontend//.env"
+            echo ENVIRONMENT=production >> "frontend//.env"
+            echo API_URL="http://${BACKEND_IP}:3030" >> "frontend/.env"  # to send beckedn url to frontend env
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            cd frontend
-            npm install
-            npm run build
+
       - run:
           name: Deploy frontend objects
           command: |
@@ -439,9 +472,9 @@ jobs:
       - run:
           name: add value in the backend/.env file
           command: |
-            >backend/.env
-            echo NODE_ENV=test >> "backend/.env"
-            #echo ENVIRONMENT=production >> "backend/.env"
+            
+            echo NODE_ENV=production >> "backend/.env"
+            echo ENVIRONMENT=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
@@ -549,9 +582,9 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=Udapeople
               
-#      - revert-migrations
-#      - destroy-environment:
-#          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
+      - revert-migrations
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
       # Here's where you will add some code to rollback on failure  
 #
   cleanup:
