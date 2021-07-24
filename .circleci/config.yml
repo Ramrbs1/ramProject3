@@ -258,7 +258,8 @@ jobs:
           command: |
             yum install -y tar # install the tar
             yum install -y gzip # install the gzip
-            aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=back-end-${CIRCLE_WORKFLOW_ID:0:7}" --output text >> ~/project/.circleci/ansible/inventory.txt
+            #aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicIpAddress"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
+            aws ec2 describe-instances --region us-east-1 --query "Reservations[*].Instances[*].PublicDnsName"  --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
             #aws cloudformation list-exports --query "Exports[?Name==\`backendEC2publicdns\`].Value" --no-paginate --output text >> ~/project/.circleci/ansible/inventory.txt
             cat ~/project/.circleci/ansible/inventory.txt
 #            sed -i '2s/$/ ansible_python_interpreter=\/usr\/bin\/python3/' ~/project/.circleci/ansible/inventory.txt
@@ -370,14 +371,15 @@ jobs:
             echo " =========================================="
             echo "THIS IS Ram_migrations.txt CONTENTS:"
             cat Ram_migrations.txt
+            
           no_output_timeout: 30m
       - run:
           name: Send migration results to memstash
           command: |
             cd backend
-            tail -10 Ram_migrations.txt
-            grep  "has been executed successfully" Ram_migrations.txt
-            if [ $? -eq 0 ]
+            #grep  "has been executed successfully" Ram_migrations.txt
+            if grep -q "has been executed successfully" Ram_migrations.txt;
+            #if [ $? -eq 0 ]
               then
                 echo "Migration is Succesfullly Completed"
                 echo "Placing 1 to migration_${CIRCLE_WORKFLOW_ID:0:7}"
@@ -541,10 +543,11 @@ jobs:
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
+              exit 1 # to get failed teh smoke test to take the screenshot 
             else
               return 1
             fi
-            exit 1 # to get failed teh smoke test to take the screenshot
+            
 
       - revert-migrations
       - destroy-environment:
@@ -601,7 +604,7 @@ jobs:
             export OldWorkflowID=$(curl -H "token: 8255788f-c262-4010-9e6e-d9e6a5748390" --request GET https://api.memstash.io/values/workflow_ID)
             echo "Privious_workflow_id is ${OldWorkflowID}"
             export STACKS=$(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --output text)
-            echo " Privious Stacks are ${STACKS}"
+            echo " All Stacks are ${STACKS}"
             # deleting the old s3 bucket and stacks
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
