@@ -1,0 +1,5 @@
+#Create the re-requsites   
+export OldWorkflowID=ra1k061yhdkclt198
+aws cloudformation deploy --template-file backend.yml --region=us-east-1 --tags name=back-end --stack-name "back-end-${OldWorkflowID}" --parameter-overrides ID=${OldWorkflowID}
+aws cloudformation deploy --template-file frontend.yml --region=us-east-1 --tags name=front-end --stack-name "front-end-${OldWorkflowID}" --parameter-overrides ID=${OldWorkflowID}
+aws cloudformation deploy --template-file cloudfront.yml --region us-east-1  --tags project=Udapeople --stack-name udapeople-cloudfront --parameter-overrides WorkflowID=${OldWorkflowID} 
