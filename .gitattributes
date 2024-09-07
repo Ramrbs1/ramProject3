@@ -1,3 +1,2 @@
 pipeline.xml merge=ours
-
 .gitlab-ci.yml merge=ours
